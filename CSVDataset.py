@@ -11,15 +11,15 @@ from board import Board
 class CSVDataset(Dataset):
     def __init__(self):
         self.data = []
-
+        
         df = pd.read_csv("data/club_games_data.csv")
-        df = df.head(1)
         for _, row in df.iterrows():
             pgn = row['pgn']
             pgn_string = io.StringIO(pgn)
             game = chess.pgn.read_game(pgn_string)
             board = game.board()
             self.data.append(Board(board).serialize())
+        print("Loaded data")
 
     def __len__(self):
         return len(self.data)
@@ -31,5 +31,5 @@ class CSVDataset(Dataset):
 if __name__ == "__main__":
     csvDataset = CSVDataset()
     for board in csvDataset.data:
-        print(board)
+        print(board.shape)
     
