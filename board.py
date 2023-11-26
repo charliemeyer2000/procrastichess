@@ -2,7 +2,7 @@
 import chess
 import numpy as np
 
-class State():
+class Board():
     def __init__(self, board = None):
         if board is None:
             self.board = chess.Board()
@@ -50,6 +50,6 @@ class State():
 
 
 if __name__ == "__main__": 
-    s = State()
+    s = Board()
     state = s.serialize()
     print(state.size)
