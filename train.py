@@ -12,7 +12,7 @@ import os
 class ChessValueFuncNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(7, 64, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv2d(11, 64, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
         self.conv3 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
         self.conv4 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
@@ -46,9 +46,9 @@ if __name__ == "__main__":
         mps_device = torch.device("cpu")
         print("MPS is not available, using CPU")
 
-    # dataset = CSVDataset()
     print("Starting to load the data")
-    dataset = PGNDataset("data/lichess_db.pgn")
+    # dataset = PGNDataset("data/lichess_db.pgn")
+    dataset = CSVDataset("data/club_games_data.csv")
     print("Finished loading the data")
     train_loader = DataLoader(dataset=dataset,
                               batch_size=32,
@@ -62,19 +62,21 @@ if __name__ == "__main__":
     for epoch in range(50):
         all_loss = 0
         num_loss = 0
-        for i, data in enumerate(train_loader):
-            data = data.float().to(mps_device)
+        for i, (serialized_board, result) in enumerate(train_loader):
+            serialized_board = serialized_board.squeeze(0).float().to(mps_device)
+            result = result.float().view(-1, 1).to(mps_device)  # Ensure result has the right shape
             optimizer.zero_grad()
-            output = model(data)
-            loss = loss_fn(output, torch.zeros(len(output), 1).to(mps_device))
+            output = model(serialized_board)
+            loss = loss_fn(torch.tanh(output), result)
             loss.backward()
             optimizer.step()
             all_loss += loss.item()
             num_loss += 1
+
             
         print("Epoch: {}, Loss: {}".format(epoch, all_loss / num_loss))
-    if (os.path.isdir("output_nets") == False):
-        os.mkdir("output_nets")
+if (os.path.isdir("output_nets") == False):
+    os.mkdir("output_nets")
 
-    torch.save(model.state_dict(), "output_nets/model.pth")
+torch.save(model.state_dict(), "output_nets/model.pth")
 

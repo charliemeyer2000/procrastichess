@@ -20,11 +20,18 @@ class PGNDataset(Dataset):
             board = game.board()
             for move in game.mainline_moves():
                 board.push(move)
-                self.data.append(Board(board).serialize())
+            result = game.headers["Result"]
+            if result == '1-0':
+                result = 1
+            elif result == '0-1':
+                result = -1
+            else:
+                result = 0
             game = chess.pgn.read_game(io.StringIO(pgn_data))
             print("Loaded game", len(self.data))
             
-        print("Loaded data")
+            
+    print("Loaded data")
 
     def __len__(self):
         return len(self.data)

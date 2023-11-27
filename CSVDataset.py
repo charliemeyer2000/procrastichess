@@ -9,16 +9,25 @@ import io
 from board import Board
 
 class CSVDataset(Dataset):
-    def __init__(self):
+    def __init__(self, file_path):
         self.data = []
         
-        df = pd.read_csv("data/club_games_data.csv")
+        df = pd.read_csv(file_path)
         for _, row in df.iterrows():
             pgn = row['pgn']
             pgn_string = io.StringIO(pgn)
             game = chess.pgn.read_game(pgn_string)
             board = game.board()
-            self.data.append(Board(board).serialize())
+            for move in game.mainline_moves():
+                board.push(move)
+            if row['black_result'] == 'win':
+                result = -1
+            elif row['white_result'] == 'win':
+                result = 1
+            else:
+                result = 0
+            self.data.append((Board(board).serialize(), result))
+            print("Loaded game", len(self.data))
         print("Loaded data")
 
     def __len__(self):
@@ -29,7 +38,7 @@ class CSVDataset(Dataset):
 
 
 if __name__ == "__main__":
-    csvDataset = CSVDataset()
+    csvDataset = CSVDataset("data/club_games_data.csv")
     for board in csvDataset.data:
-        print(board.shape)
+        print(board[0].shape)
     
