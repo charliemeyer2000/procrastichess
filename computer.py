@@ -23,6 +23,12 @@ class ComputerValueFunction():
         return chess.Board(fen)
     
 
+def normalize_stockfish_eval(eval_sf):
+    return max(-1, min(1, eval_sf / 1000))
+
+
+    
+
 # compare to stockfish
 if __name__ == "__main__":
     fen_list = [
@@ -52,20 +58,22 @@ if __name__ == "__main__":
     ]
 
     stockfish = Stockfish("/usr/local/bin/stockfish")
-    computer = ComputerValueFunction()
+    path_to_model = "output_nets/model_50_epochs_csvdata.pth"
+    computer = ComputerValueFunction(path_to_model)
 
 
     for index, fen in enumerate(fen_list):
         stockfish.set_fen_position(fen)
         stockfish_eval = stockfish.get_evaluation()
+        stockfish_eval = stockfish_eval["value"]
         # compare to computer
         board = chess.Board(fen)
         computer_eval = computer.evaluate(board)
         print("--------------------------------------")
         print("***** Evaluating fen: ", fen, " *****")
-        print("Stockfish eval: ", stockfish_eval['value'] / 1000)
+        print("Stockfish eval: ", stockfish_eval / 1000)
         print("Computer eval: ", computer_eval)
-        print("Difference: ", abs(stockfish_eval['value'] / 1000 - computer_eval))
+        print("Difference: ", abs(stockfish_eval / 1000 - computer_eval))
     print("--------------------------------------")
 
 

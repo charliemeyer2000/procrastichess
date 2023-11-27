@@ -46,7 +46,7 @@ class PGNDataset(Dataset):
         return self.data[idx]
     
 if __name__ == "__main__":
-    file_path = "data/lichess_db.pgn"
+    file_path = "data/lichess_db_2013_01.pgn"
     pgnDataset = PGNDataset(file_path=file_path)
     print(pgnDataset[0].shape)
 

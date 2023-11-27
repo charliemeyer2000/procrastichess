@@ -19,7 +19,7 @@ class ChessValueFuncNetwork(torch.nn.Module):
         self.conv5 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
         self.conv6 = nn.Conv2d(128, 128, kernel_size=3, stride=2)
         self.conv7 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.fc1 = nn.Linear(128, 1024)  # Adjust input size based on output of conv7
+        self.fc1 = nn.Linear(128, 1024)  
         self.fc2 = nn.Linear(1024, 1)
 
     def forward(self, x):
@@ -30,9 +30,10 @@ class ChessValueFuncNetwork(torch.nn.Module):
         x = F.relu(self.conv5(x))
         x = F.relu(self.conv6(x))
         x = F.relu(self.conv7(x))
-        x = x.view(x.size(0), -1)  # Flatten layer
+        x = x.view(x.size(0), -1)  
         x = F.relu(self.fc1(x))
-        x = self.fc2(x)  # Output layer
+        x = self.fc2(x)  
+        x = torch.tanh(x)  
         return x
 
 if __name__ == "__main__":
@@ -57,7 +58,7 @@ if __name__ == "__main__":
 
     model.train()
 
-    num_epochs = 10
+    num_epochs = 50
 
     for epoch in range(num_epochs):
         all_loss = 0
@@ -79,5 +80,5 @@ if __name__ == "__main__":
     if (os.path.isdir("output_nets") == False):
         os.mkdir("output_nets")
 
-    torch.save(model.state_dict(), "output_nets/model.pth")
+    torch.save(model.state_dict(), "output_nets/model_50_epochs_csvdata.pth")
 
