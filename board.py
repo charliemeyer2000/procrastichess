@@ -15,20 +15,16 @@ class Board():
     # convert to format for neural network, 8x8x14
     def serialize(self):
         assert self.board.is_valid
-        bstate = np.zeros((6, 8, 8), np.uint8)  # 6 channels for piece types (pawn, knight, bishop, rook, queen, king)
+        # 8x8 squares, 12 piece types, 8x8 board
+        bstate = np.zeros((12, 8, 8), np.uint8)
 
         for i in range(64):
             piece = self.board.piece_at(i)
             if piece is not None:
-                # Map piece types to channels (excluding the king)
-                channel = {
-                    chess.PAWN: 0,
-                    chess.KNIGHT: 1,
-                    chess.BISHOP: 2,
-                    chess.ROOK: 3,
-                    chess.QUEEN: 4,
-                }.get(piece.piece_type, 5)
-                bstate[channel, i // 8, i % 8] = 1
+                piece_type = piece.piece_type - 1 
+                color = piece.color
+                index = piece_type + color * 6
+                bstate[index, i // 8, i % 8] = 1
 
         # Encode castling rights
         castling_rights = np.zeros((4, 8, 8), np.uint8)
