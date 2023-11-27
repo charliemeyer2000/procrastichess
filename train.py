@@ -32,7 +32,7 @@ class ChessValueFuncNetwork(torch.nn.Module):
         x = F.relu(self.conv7(x))
         x = x.view(x.size(0), -1)  
         x = F.relu(self.fc1(x))
-        x = self.fc2(x)  
+        x = self.fc2(x)
         x = torch.tanh(x)  
         return x
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     model.train()
 
-    num_epochs = 50
+    num_epochs = 100
 
     for epoch in range(num_epochs):
         all_loss = 0
@@ -80,5 +80,5 @@ if __name__ == "__main__":
     if (os.path.isdir("output_nets") == False):
         os.mkdir("output_nets")
 
-    torch.save(model.state_dict(), "output_nets/model_50_epochs_csvdata.pth")
+    torch.save(model.state_dict(), "output_nets/model_100_epochs_csvdata.pth")
 
