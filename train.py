@@ -1,8 +1,10 @@
 #!/Users/charlie/miniconda3/bin/python3
 from torch.utils.data import Dataset, DataLoader
 from CSVDataset import CSVDataset 
+from PGNDataset import PGNDataset
 import numpy as np
 import torch.nn.functional as F
+import torch.nn as nn
 import torch
 import os
 
@@ -10,23 +12,29 @@ import os
 class ChessValueFuncNetwork(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = torch.nn.Conv2d(7, 32, kernel_size=3, padding=1)
-        self.conv2 = torch.nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.conv3 = torch.nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv4 = torch.nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.fc1 = torch.nn.Linear(128 * 8 * 8, 1024)
-        self.fc2 = torch.nn.Linear(1024, 1)
-
-
+        self.conv1 = nn.Conv2d(7, 64, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.conv6 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.conv7 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.dropout = nn.Dropout(0.5)  # Dropout layer
+        self.fc1 = nn.Linear(128 * 8 * 8, 1024)
+        self.fc2 = nn.Linear(1024, 1)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = F.relu(self.conv3(x))
         x = F.relu(self.conv4(x))
+        x = F.relu(self.conv5(x))
+        x = F.relu(self.conv6(x))
+        x = F.relu(self.conv7(x))
         x = x.view(-1, 128 * 8 * 8)  # Flatten layer
+        x = self.dropout(x)  # Apply dropout
         x = F.relu(self.fc1(x))
-        x = torch.tanh(self.fc2(x))  # thanks geohot, -1 to 1 is better than 0 to 1
+        x = torch.tanh(self.fc2(x))  # Output layer
         return x
 
 if __name__ == "__main__":
@@ -38,7 +46,10 @@ if __name__ == "__main__":
         mps_device = torch.device("cpu")
         print("MPS is not available, using CPU")
 
-    dataset = CSVDataset()
+    # dataset = CSVDataset()
+    print("Starting to load the data")
+    dataset = PGNDataset("data/lichess_db.pgn")
+    print("Finished loading the data")
     train_loader = DataLoader(dataset=dataset,
                               batch_size=32,
                               shuffle=True)
@@ -48,14 +59,14 @@ if __name__ == "__main__":
 
     model.train()
 
-    for epoch in range(100):
+    for epoch in range(50):
         all_loss = 0
         num_loss = 0
         for i, data in enumerate(train_loader):
             data = data.float().to(mps_device)
             optimizer.zero_grad()
             output = model(data)
-            loss = loss_fn(output, torch.zeros(len(output), device=mps_device))
+            loss = loss_fn(output, torch.zeros(len(output), 1).to(mps_device))
             loss.backward()
             optimizer.step()
             all_loss += loss.item()
