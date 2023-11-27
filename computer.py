@@ -1,5 +1,6 @@
 #!/Users/charlie/miniconda3/bin/python3
 from train import ChessValueFuncNetwork
+import matplotlib.pyplot as plt
 from stockfish import Stockfish
 from board import Board
 import pandas as pd
@@ -9,9 +10,10 @@ import io
 
 class ComputerValueFunction():
     def __init__(self, model_path = "output_nets/model.pth"):
-        model = torch.load(model_path)
         self.model = ChessValueFuncNetwork()
-        self.model.load_state_dict(model)
+        checkpoint = torch.load(model_path)
+        self.model.load_state_dict(checkpoint)
+        self.model.eval()  # Set the model to evaluation mode
 
     def evaluate(self, board):
         board = Board(board)
@@ -58,8 +60,11 @@ if __name__ == "__main__":
     ]
 
     stockfish = Stockfish("/usr/local/bin/stockfish")
-    path_to_model = "output_nets/model_50_epochs_csvdata.pth"
-    computer = ComputerValueFunction(path_to_model)
+    path_to_model = "output_nets/model_50_epochs_2013pgn.pth"
+    computer = ComputerValueFunction(model_path=path_to_model)
+
+    stockfish_evals = []
+    computer_evals = []
 
 
     for index, fen in enumerate(fen_list):
@@ -70,12 +75,14 @@ if __name__ == "__main__":
         # compare to computer
         board = chess.Board(fen)
         computer_eval = computer.evaluate(board)
-        print("--------------------------------------")
-        print("***** Evaluating fen: ", fen, " *****")
-        print("Stockfish eval: ", stockfish_eval / 1000)
-        print("Computer eval: ", computer_eval)
-        print("Difference: ", abs(stockfish_eval / 1000 - computer_eval))
-    print("--------------------------------------")
+        # Append evaluations to lists
+        stockfish_evals.append(normalize_stockfish_eval(stockfish_eval))
+        computer_evals.append(computer_eval)
+        print("--------------------------------")
+        print(f"stockfish_eval: {stockfish_eval}")
+        print(f"computer_eval: {computer_eval}")
+    print("--------------------------------")
+
 
 
 

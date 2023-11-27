@@ -20,33 +20,32 @@ class ChessValueFuncNetwork(torch.nn.Module):
         self.conv6 = nn.Conv2d(128, 128, kernel_size=3, stride=2)
         self.conv7 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
 
-        self.bn1 = nn.BatchNorm2d(64)
-        self.bn2 = nn.BatchNorm2d(128)
-        self.bn3 = nn.BatchNorm2d(128)
-        self.bn4 = nn.BatchNorm2d(128)
-        self.bn5 = nn.BatchNorm2d(128)
-        self.bn6 = nn.BatchNorm2d(128)
-        self.bn7 = nn.BatchNorm2d(128)
+        # self.bn1 = nn.BatchNorm2d(64)
+        # self.bn2 = nn.BatchNorm2d(128)
+        # self.bn3 = nn.BatchNorm2d(128)
+        # self.bn4 = nn.BatchNorm2d(128)
+        # self.bn5 = nn.BatchNorm2d(128)
+        # self.bn6 = nn.BatchNorm2d(128)
+        # self.bn7 = nn.BatchNorm2d(128)
 
         self.fc1 = nn.Linear(128, 1024)  
         self.fc2 = nn.Linear(1024, 1)
 
     def forward(self, x):
-
         x = F.relu(self.conv1(x))
-        x = self.bn1(x)
+        # x = self.bn1(x)
         x = F.relu(self.conv2(x))
-        x = self.bn2(x)
+        # x = self.bn2(x)
         x = F.relu(self.conv3(x))
-        x = self.bn3(x)
+        # x = self.bn3(x)
         x = F.relu(self.conv4(x))
-        x = self.bn4(x)
+        # x = self.bn4(x)
         x = F.relu(self.conv5(x))
-        x = self.bn5(x)
+        # x = self.bn5(x)
         x = F.relu(self.conv6(x))
-        x = self.bn6(x)
+        # x = self.bn6(x)
         x = F.relu(self.conv7(x))
-        x = self.bn7(x)
+        # x = self.bn7(x)
         x = x.view(x.size(0), -1)  
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
@@ -63,8 +62,7 @@ if __name__ == "__main__":
         print("MPS is not available, using CPU")
 
     print("Starting to load the data")
-    # dataset = PGNDataset("data/lichess_db.pgn")
-    dataset = PGNDataset("processed/my_processed_data.pth")
+    dataset = CSVDataset(data_file_path="data/club_games_data.csv", processed_file_path="processed/processed_CSV_every_5th_move.pth")
     print("Finished loading the data")
     train_loader = DataLoader(dataset=dataset,
                               batch_size=32,
@@ -76,7 +74,8 @@ if __name__ == "__main__":
 
     model.train()
 
-    num_epochs = 50
+    num_epochs = 25
+    print(f'Starting training with {num_epochs} epochs')
 
     for epoch in range(num_epochs):
         all_loss = 0
@@ -100,5 +99,5 @@ if __name__ == "__main__":
     if (os.path.isdir("output_nets") == False):
         os.mkdir("output_nets")
 
-    torch.save(model.state_dict(), "output_nets/model_50_epochs_csvdata.pth")
+    torch.save(model.state_dict(), "output_nets/model_25_epochs_csv.pth")
 

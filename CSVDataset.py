@@ -27,15 +27,17 @@ class CSVDataset(Dataset):
             pgn_string = io.StringIO(pgn)
             game = chess.pgn.read_game(pgn_string)
             board = game.board()
-            for move in game.mainline_moves():
+            for i, move in enumerate(game.mainline_moves()):
                 board.push(move)
-                if row['black_result'] == 'win':
-                    result = -1
-                elif row['white_result'] == 'win':
-                    result = 1
-                else:
-                    result = 0
-                self.data.append((Board(board).serialize(), result))
+                if i % 5 == 0:  # Only save the board state every 5 moves
+                    if row['black_result'] == 'win':
+                        result = -1
+                    elif row['white_result'] == 'win':
+                        result = 1
+                    else:
+                        result = 0
+                    self.data.append((Board(board).serialize(), result))
+            
             print("Loaded game", len(self.data))
 
     def __len__(self):
@@ -46,6 +48,7 @@ class CSVDataset(Dataset):
 
 
 if __name__ == "__main__":
-    csvDataset = CSVDataset("data/club_games_data.csv")
+    csvDataset = CSVDataset(processed_file_path="processed/processed_CSV_every_5th_move.pth", data_file_path="data/club_games_data.csv")
+    print(f'In total there are {len(csvDataset)} games')
     print(csvDataset[0][0].shape)
     
