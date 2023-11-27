@@ -58,7 +58,7 @@ if __name__ == "__main__":
     ]
 
     stockfish = Stockfish("/usr/local/bin/stockfish")
-    path_to_model = "output_nets/model_50_epochs_csvdata.pth"
+    path_to_model = "output_nets/model_100_epochs_csvdata.pth"
     computer = ComputerValueFunction(path_to_model)
 
 
@@ -66,6 +66,7 @@ if __name__ == "__main__":
         stockfish.set_fen_position(fen)
         stockfish_eval = stockfish.get_evaluation()
         stockfish_eval = stockfish_eval["value"]
+        stockfish_eval = normalize_stockfish_eval(stockfish_eval)
         # compare to computer
         board = chess.Board(fen)
         computer_eval = computer.evaluate(board)
