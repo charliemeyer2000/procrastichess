@@ -9,7 +9,7 @@ import os
 from board import Board
 
 class CSVDataset(Dataset):
-    def __init__(self, file_path, processed_file_path="processed/processed_CSV.pth"):
+    def __init__(self, data_file_path, processed_file_path="processed/processed_CSV.pth"):
         if not os.path.exists("processed"):
             os.mkdir("processed")
         if os.path.exists(processed_file_path):
@@ -17,7 +17,7 @@ class CSVDataset(Dataset):
         else:
             self.data = []
             print("Loading data")
-            self.load_data(file_path)
+            self.load_data(data_file_path)
             torch.save(self.data, processed_file_path)
 
     def load_data(self, file_path):
@@ -29,13 +29,13 @@ class CSVDataset(Dataset):
             board = game.board()
             for move in game.mainline_moves():
                 board.push(move)
-            if row['black_result'] == 'win':
-                result = -1
-            elif row['white_result'] == 'win':
-                result = 1
-            else:
-                result = 0
-            self.data.append((Board(board).serialize(), result))
+                if row['black_result'] == 'win':
+                    result = -1
+                elif row['white_result'] == 'win':
+                    result = 1
+                else:
+                    result = 0
+                self.data.append((Board(board).serialize(), result))
             print("Loaded game", len(self.data))
 
     def __len__(self):
