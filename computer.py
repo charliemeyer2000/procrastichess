@@ -60,11 +60,12 @@ if __name__ == "__main__":
     ]
 
     stockfish = Stockfish("/usr/local/bin/stockfish")
-    path_to_model = "output_nets/model_50_epochs_2013pgn.pth"
+    path_to_model = "output_nets/model_25_epochs_every5thMove_csv/EPOCH1_model_25_epochs_every5thMove_csv.pth"
     computer = ComputerValueFunction(model_path=path_to_model)
 
     stockfish_evals = []
     computer_evals = []
+    avg_diff = 0
 
 
     for index, fen in enumerate(fen_list):
@@ -81,8 +82,12 @@ if __name__ == "__main__":
         print("--------------------------------")
         print(f"stockfish_eval: {stockfish_eval}")
         print(f"computer_eval: {computer_eval}")
-    print("--------------------------------")
+        print(f'Difference: {abs(stockfish_eval - computer_eval)}')
+        avg_diff += abs(stockfish_eval - computer_eval)
+    
 
+    print("--------------------------------")
+    print(f"Average difference: {avg_diff / len(fen_list)}")
 
 
 

@@ -61,8 +61,16 @@ if __name__ == "__main__":
         mps_device = torch.device("cpu")
         print("MPS is not available, using CPU")
 
+
+    ###### INPUT DATA FOR NET GO HERE ######
+    data_file_path = "data/club_games_data.csv"
+    processed_file_path = "processed/processed_CSV_every_move.pth"
+    model_output_name = "model_50_epochs_everymove_csv"
+    ########################################
+
+
     print("Starting to load the data")
-    dataset = CSVDataset(data_file_path="data/club_games_data.csv", processed_file_path="processed/processed_CSV_every_5th_move.pth")
+    dataset = CSVDataset(data_file_path=data_file_path, processed_file_path=processed_file_path)
     print("Finished loading the data")
     train_loader = DataLoader(dataset=dataset,
                               batch_size=32,
@@ -74,8 +82,12 @@ if __name__ == "__main__":
 
     model.train()
 
-    num_epochs = 25
+    num_epochs = 50
     print(f'Starting training with {num_epochs} epochs')
+    if (os.path.isdir("output_nets") == False):
+        os.mkdir("output_nets")
+    if (os.path.isdir(f'output_nets/{model_output_name}') == False):
+        os.mkdir(f'output_nets/{model_output_name}')
 
     for epoch in range(num_epochs):
         all_loss = 0
@@ -96,8 +108,8 @@ if __name__ == "__main__":
             all_loss += loss.item()
             num_loss += 1
         print("Epoch: {}, Loss: {}".format(epoch, all_loss / num_loss))
-    if (os.path.isdir("output_nets") == False):
-        os.mkdir("output_nets")
+        epoch_dir = f'output_nets/{model_output_name}'
+        torch.save(model.state_dict(), f'{epoch_dir}/EPOCH{epoch}_{model_output_name}.pth')
 
-    torch.save(model.state_dict(), "output_nets/model_25_epochs_csv.pth")
+    torch.save(model.state_dict(), f'output_nets/{model_output_name}.pth')
 

@@ -25,21 +25,13 @@ class PGNDataset(Dataset):
             torch.save(self.data, processed_file_path)
 
     def load_data(self, file_path):
-        with open(file_path, encoding="utf-8-sig", errors="ignore") as pgn:
+        with open(file_path, encoding="acii", errors="ignore") as pgn:
             while True:
-                try:
-                    game = chess.pgn.read_game(pgn)
-                except Exception as e:
-                    print(e)
-                    continue
+                game = chess.pgn.read_game(pgn)
                 board = game.board()
 
                 for move in game.mainline_moves():
-                    try:
-                        board.push(move)
-                    except Exception as e:
-                        print(e)
-                        continue
+                    board.push(move)
 
                     result = game.headers["Result"]
                     if result == '1-0':

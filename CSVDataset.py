@@ -13,10 +13,10 @@ class CSVDataset(Dataset):
         if not os.path.exists("processed"):
             os.mkdir("processed")
         if os.path.exists(processed_file_path):
+            print("Already processed data exists at", processed_file_path, " , loading that instead")
             self.data = torch.load(processed_file_path)
         else:
             self.data = []
-            print("Loading data")
             self.load_data(data_file_path)
             torch.save(self.data, processed_file_path)
 
@@ -29,14 +29,13 @@ class CSVDataset(Dataset):
             board = game.board()
             for i, move in enumerate(game.mainline_moves()):
                 board.push(move)
-                if i % 5 == 0:  # Only save the board state every 5 moves
-                    if row['black_result'] == 'win':
-                        result = -1
-                    elif row['white_result'] == 'win':
-                        result = 1
-                    else:
-                        result = 0
-                    self.data.append((Board(board).serialize(), result))
+                if row['black_result'] == 'win':
+                    result = -1
+                elif row['white_result'] == 'win':
+                    result = 1
+                else:
+                    result = 0
+                self.data.append((Board(board).serialize(), result))
             
             print("Loaded game", len(self.data))
 
@@ -48,7 +47,7 @@ class CSVDataset(Dataset):
 
 
 if __name__ == "__main__":
-    csvDataset = CSVDataset(processed_file_path="processed/processed_CSV_every_5th_move.pth", data_file_path="data/club_games_data.csv")
+    csvDataset = CSVDataset(processed_file_path="processed/processed_CSV_every_move.pth", data_file_path="data/club_games_data.csv")
     print(f'In total there are {len(csvDataset)} games')
     print(csvDataset[0][0].shape)
     
