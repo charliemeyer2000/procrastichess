@@ -14,13 +14,12 @@ class ChessValueFuncNetwork(torch.nn.Module):
         super().__init__()
         self.conv1 = nn.Conv2d(11, 64, kernel_size=3, padding=1)
         self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(128, 128, kernel_size=3, stride=2)
         self.conv4 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
         self.conv5 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.conv6 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
+        self.conv6 = nn.Conv2d(128, 128, kernel_size=3, stride=2)
         self.conv7 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.dropout = nn.Dropout(0.5)  # Dropout layer
-        self.fc1 = nn.Linear(128 * 8 * 8, 1024)
+        self.fc1 = nn.Linear(128, 1024)  # Adjust input size based on output of conv7
         self.fc2 = nn.Linear(1024, 1)
 
     def forward(self, x):
@@ -31,10 +30,9 @@ class ChessValueFuncNetwork(torch.nn.Module):
         x = F.relu(self.conv5(x))
         x = F.relu(self.conv6(x))
         x = F.relu(self.conv7(x))
-        x = x.view(-1, 128 * 8 * 8)  # Flatten layer
-        x = self.dropout(x)  # Apply dropout
+        x = x.view(x.size(0), -1)  # Flatten layer
         x = F.relu(self.fc1(x))
-        x = torch.tanh(self.fc2(x))  # Output layer
+        x = self.fc2(x)  # Output layer
         return x
 
 if __name__ == "__main__":
@@ -48,7 +46,7 @@ if __name__ == "__main__":
 
     print("Starting to load the data")
     # dataset = PGNDataset("data/lichess_db.pgn")
-    dataset = CSVDataset("data/club_games_data.csv")
+    dataset = CSVDataset("processed/processed_CSV.pth")
     print("Finished loading the data")
     train_loader = DataLoader(dataset=dataset,
                               batch_size=32,
@@ -59,24 +57,27 @@ if __name__ == "__main__":
 
     model.train()
 
-    for epoch in range(50):
+    num_epochs = 10
+
+    for epoch in range(num_epochs):
         all_loss = 0
         num_loss = 0
         for i, (serialized_board, result) in enumerate(train_loader):
-            serialized_board = serialized_board.squeeze(0).float().to(mps_device)
+            serialized_board = serialized_board.float().to(mps_device)
+            # print(f'serialized_board.shape: {serialized_board.shape}')
             result = result.float().view(-1, 1).to(mps_device)  # Ensure result has the right shape
+            # print(f'result.shape: {result.shape}')
             optimizer.zero_grad()
             output = model(serialized_board)
+            # print(f'output.shape: {output.shape}')
             loss = loss_fn(torch.tanh(output), result)
             loss.backward()
             optimizer.step()
             all_loss += loss.item()
             num_loss += 1
-
-            
         print("Epoch: {}, Loss: {}".format(epoch, all_loss / num_loss))
-if (os.path.isdir("output_nets") == False):
-    os.mkdir("output_nets")
+    if (os.path.isdir("output_nets") == False):
+        os.mkdir("output_nets")
 
-torch.save(model.state_dict(), "output_nets/model.pth")
+    torch.save(model.state_dict(), "output_nets/model.pth")
 
