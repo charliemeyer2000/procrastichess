@@ -60,7 +60,7 @@ if __name__ == "__main__":
     ]
 
     stockfish = Stockfish("/usr/local/bin/stockfish")
-    path_to_model = "output_nets/model_25_epochs_every5thMove_csv/EPOCH1_model_25_epochs_every5thMove_csv.pth"
+    path_to_model = "output_nets/model_50_epochs_everymove_100klimit_withbatchnorm_csv/EPOCH8_model_50_epochs_everymove_100klimit_withbatchnorm_csv.pth"
     computer = ComputerValueFunction(model_path=path_to_model)
 
     stockfish_evals = []
