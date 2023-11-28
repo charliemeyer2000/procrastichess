@@ -23,9 +23,6 @@ class CSVDataset(Dataset):
     def load_data(self, file_path):
         df = pd.read_csv(file_path)
         for _, row in df.iterrows():
-            if (len(self.data) > 100_000):
-                print("Loaded 100k games, stopping.")
-                break
             pgn = row['pgn']
             pgn_string = io.StringIO(pgn)
             game = chess.pgn.read_game(pgn_string)
@@ -50,7 +47,7 @@ class CSVDataset(Dataset):
 
 
 if __name__ == "__main__":
-    csvDataset = CSVDataset(processed_file_path="processed/processed_CSV_every_move_100klimit.pth", data_file_path="data/club_games_data.csv")
+    csvDataset = CSVDataset(processed_file_path="processed/processed_CSV_every_move.pth", data_file_path="data/club_games_data.csv")
     print(f'In total there are {len(csvDataset)} games')
     print(csvDataset[0][0].shape)
     

@@ -23,8 +23,8 @@ if __name__ == "__main__":
 
     ###### INPUT DATA FOR NET GO HERE ######
     data_file_path = "data/club_games_data.csv"
-    processed_file_path = "processed/processed_CSV_every_move_100klimit.pth"
-    model_output_name = "model_50_epochs_everymove_100klimit_csv_RESNET"
+    processed_file_path = "processed/processed_CSV_every_move.pth"
+    model_output_name = "model_50_epochs_every_move_csv_RESNET"
     ########################################
 
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
                               shuffle=True)
     model = MyResNet().to(mps_device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
     loss_fn = torch.nn.MSELoss()
 
     model.train()
@@ -54,33 +54,38 @@ if __name__ == "__main__":
         start_time = time.time()
         cur_loss = 0
         last_loss = 0
+        least_loss_epoch = 999
         for i, (serialized_board, result) in enumerate(train_loader):
             serialized_board = serialized_board.float().to(mps_device)
-            # print(f'serialized_board.shape: {serialized_board.shape}')
-            result = result.float().view(-1, 1).to(mps_device)  # Ensure result has the right shape
-            # print(f'result.shape: {result.shape}')
+            result = result.float().view(-1, 1).to(mps_device)
             optimizer.zero_grad()
             output = model(serialized_board)
-            # print(f'output.shape: {output.shape}')
             loss = loss_fn(torch.tanh(output), result)
             loss.backward()
             optimizer.step()
-            # scheduler.step()
+            scheduler.step()
 
             all_loss += loss.item()
             num_loss += 1
             end_time = time.time()
-        print(f'Epoch: {epoch}, Loss: {all_loss / num_loss}, Time (in minutes): {(end_time - start_time) / 60}')
+
+        print(f'Epoch: {epoch}, Loss: {all_loss / num_loss}, Time (minutes, hours): {(end_time - start_time) / 60}, {(end_time - start_time) / 3600}')
         cur_loss = all_loss / num_loss
-        if (abs(cur_loss - last_loss) <= 0.0001):
+
+        if (cur_loss < least_loss_epoch):
+            least_loss_epoch = epoch
+
+        if abs(cur_loss - last_loss) <= 0.0001:
             print("Loss has converged, stopping training")
             break
-        # only save the model if the difference between the current loss and the last loss is greater than 0.1
-        if (abs(cur_loss - last_loss) >= 0.1):
-            print(f'Saving model {model_output_name} at epoch {epoch}')
-            epoch_dir = f'output_nets/{model_output_name}'
-            torch.save(model.state_dict(), f'{epoch_dir}/EPOCH{epoch}_{model_output_name}.pth')
+
+        print(f'Saving model {model_output_name} at epoch {epoch}')
+        epoch_dir = f'output_nets/{model_output_name}'
+        torch.save(model.state_dict(), f'{epoch_dir}/EPOCH{epoch}.pth')
+
         last_loss = cur_loss
 
     torch.save(model.state_dict(), f'output_nets/{model_output_name}.pth')
+    print(f'Least loss was {least_loss_epoch} with loss {cur_loss}')
+
 
