@@ -1,62 +1,15 @@
 #!/Users/charlie/miniconda3/bin/python3
 from torch.utils.data import Dataset, DataLoader
+from MyNets import ChessValueFuncNetwork
 from CSVDataset import CSVDataset 
 from PGNDataset import PGNDataset
-import numpy as np
 import torch.nn.functional as F
+from ResNet import MyResNet
+import numpy as np
 import torch.nn as nn
 import torch
 import time
 import os
-
-
-class ChessValueFuncNetwork(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = nn.Conv2d(17, 64, kernel_size=3, padding=1) # 12 + 4 + 1
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(128, 128, kernel_size=3, stride=2)
-        self.conv4 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.conv5 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.conv6 = nn.Conv2d(128, 128, kernel_size=3, stride=2)
-        self.conv7 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.conv8 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-
-
-        self.bn1 = nn.BatchNorm2d(64)
-        self.bn2 = nn.BatchNorm2d(128)
-        self.bn3 = nn.BatchNorm2d(128)
-        self.bn4 = nn.BatchNorm2d(128)
-        self.bn5 = nn.BatchNorm2d(128)
-        self.bn6 = nn.BatchNorm2d(128)
-        self.bn7 = nn.BatchNorm2d(128)
-        self.bn8 = nn.BatchNorm2d(128)
-
-        self.fc1 = nn.Linear(128, 1024)  
-        self.fc2 = nn.Linear(1024, 1)
-
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = self.bn1(x)
-        x = F.relu(self.conv2(x))
-        x = self.bn2(x)
-        x = F.relu(self.conv3(x))
-        x = self.bn3(x)
-        x = F.relu(self.conv4(x))
-        x = self.bn4(x)
-        x = F.relu(self.conv5(x))
-        x = self.bn5(x)
-        x = F.relu(self.conv6(x))
-        x = self.bn6(x)
-        x = F.relu(self.conv7(x))
-        x = self.bn7(x)
-        x = F.relu(self.conv8(x))
-        x = self.bn8(x)
-        x = x.view(x.size(0), -1)  
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        x = torch.tanh(x)  
-        return x
 
 if __name__ == "__main__":
     # for apple silicon :)
@@ -71,7 +24,7 @@ if __name__ == "__main__":
     ###### INPUT DATA FOR NET GO HERE ######
     data_file_path = "data/club_games_data.csv"
     processed_file_path = "processed/processed_CSV_every_move_100klimit.pth"
-    model_output_name = "model_50_epochs_everymove_100klimit_withbatchnorm_csv"
+    model_output_name = "model_50_epochs_everymove_100klimit_csv_RESNET"
     ########################################
 
 
@@ -81,9 +34,9 @@ if __name__ == "__main__":
     train_loader = DataLoader(dataset=dataset,
                               batch_size=32,
                               shuffle=True)
-    model = ChessValueFuncNetwork().to(mps_device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+    model = MyResNet().to(mps_device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
     loss_fn = torch.nn.MSELoss()
 
     model.train()
@@ -112,7 +65,7 @@ if __name__ == "__main__":
             loss = loss_fn(torch.tanh(output), result)
             loss.backward()
             optimizer.step()
-            scheduler.step()
+            # scheduler.step()
 
             all_loss += loss.item()
             num_loss += 1
@@ -122,12 +75,12 @@ if __name__ == "__main__":
         if (abs(cur_loss - last_loss) <= 0.0001):
             print("Loss has converged, stopping training")
             break
-        last_loss = cur_loss
-        epoch_dir = f'output_nets/{model_output_name}'
         # only save the model if the difference between the current loss and the last loss is greater than 0.1
-        if (abs(cur_loss - last_loss) > 0.1):
+        if (abs(cur_loss - last_loss) >= 0.1):
             print(f'Saving model {model_output_name} at epoch {epoch}')
+            epoch_dir = f'output_nets/{model_output_name}'
             torch.save(model.state_dict(), f'{epoch_dir}/EPOCH{epoch}_{model_output_name}.pth')
+        last_loss = cur_loss
 
     torch.save(model.state_dict(), f'output_nets/{model_output_name}.pth')
 

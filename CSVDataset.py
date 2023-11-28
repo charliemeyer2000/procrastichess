@@ -24,7 +24,7 @@ class CSVDataset(Dataset):
         df = pd.read_csv(file_path)
         for _, row in df.iterrows():
             if (len(self.data) > 100_000):
-                print("Loaded 500k games, stopping.")
+                print("Loaded 100k games, stopping.")
                 break
             pgn = row['pgn']
             pgn_string = io.StringIO(pgn)
