@@ -43,7 +43,7 @@ if __name__ == "__main__":
     fen_list = fenSupplier.fen_list
 
     stockfish = Stockfish("/usr/local/bin/stockfish")
-    path_to_model = "output_nets/model_50_epochs_everymove_100klimit_csv_RESNET/EPOCH23.pth"
+    path_to_model = "output_nets/model_50_epochs_every_move_csv_RESNET/EPOCH4.pth"
     computer = ComputerValueFunction(model_path=path_to_model)
 
     stockfish_evals = []

@@ -23,8 +23,8 @@ if __name__ == "__main__":
 
     ###### INPUT DATA FOR NET GO HERE ######
     data_file_path = "data/club_games_data.csv"
-    processed_file_path = "processed/processed_CSV_every_move.pth"
-    model_output_name = "model_50_epochs_every_move_csv_RESNET"
+    processed_file_path = "processed/processed_CSV_every_move_500klimit.pth"
+    model_output_name = "model_50_epochs_every_move_500klimit_csv_RESNET"
     ########################################
 
 

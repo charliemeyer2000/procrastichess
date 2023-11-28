@@ -23,6 +23,8 @@ class CSVDataset(Dataset):
     def load_data(self, file_path):
         df = pd.read_csv(file_path)
         for _, row in df.iterrows():
+            if (len(self.data) > 500_000):
+                break
             pgn = row['pgn']
             pgn_string = io.StringIO(pgn)
             game = chess.pgn.read_game(pgn_string)
@@ -37,7 +39,7 @@ class CSVDataset(Dataset):
                     result = 0
                 self.data.append((Board(board).serialize(), result))
             
-            print("Loaded game", len(self.data))
+            print("Loaded board", len(self.data))
 
     def __len__(self):
         return len(self.data)
@@ -47,7 +49,7 @@ class CSVDataset(Dataset):
 
 
 if __name__ == "__main__":
-    csvDataset = CSVDataset(processed_file_path="processed/processed_CSV_every_move.pth", data_file_path="data/club_games_data.csv")
-    print(f'In total there are {len(csvDataset)} games')
+    csvDataset = CSVDataset(processed_file_path="processed/processed_CSV_every_move_500klimit.pth", data_file_path="data/club_games_data.csv")
+    print(f'In total there are {len(csvDataset)} boards')
     print(csvDataset[0][0].shape)
     
